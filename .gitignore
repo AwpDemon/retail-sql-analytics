@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data exports
+exports/
+*.csv
+*.xlsx
+!scripts/sample_output/
+
+# Database
+*.db
+*.sqlite
+*.dump
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
