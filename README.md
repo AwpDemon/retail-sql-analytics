@@ -1,6 +1,6 @@
 # RetailPulse Analytics Database
 
-**University of Georgia | MIST 4600 — Database Management | Spring 2025**
+**University of Georgia | MIST 4610 — Database Management | Spring 2025**
 
 A relational database and SQL analytics project built around a simulated e-commerce/retail business ("RetailPulse"), designed to demonstrate end-to-end data modeling, query development, and performance optimization.
 
