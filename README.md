@@ -56,13 +56,46 @@ erDiagram
 
 Findings summary in [`analysis/findings.md`](analysis/findings.md) — top 10% of customers drive ~42% of revenue, Electronics has the lowest margins, Q4 is 31% of annual sales, laptops + USB-C hubs have a 4.8 lift score.
 
+## Results
+
+`analysis/run_analytics.py` loads synthetic data into DuckDB (same Postgres-compatible SQL) and renders the six charts I keep coming back to. 2,000 customers, 12,000 orders, ~24.6k line items.
+
+![Pareto curve — revenue concentration](analysis/outputs/01_pareto_revenue.png)
+
+The top 10% of customers drive ~41% of revenue — classic Pareto, and the argument for any retention program being tiered rather than flat. Everything to the left of the 10% gridline is where your CAC budget should live.
+
+![Revenue by category](analysis/outputs/02_category_revenue.png)
+
+Electronics leads on gross revenue but — separately — has the thinnest margins in the category report. That's the Electronics-specific version of "don't confuse revenue with profit" that shows up when you split the two queries.
+
+![Monthly seasonality](analysis/outputs/03_monthly_seasonality.png)
+
+Q4 is ~34% of annual revenue. November-December dominate, with a smaller shoulder in October. Useful for any forecasting work — an ARIMA without a seasonal term would miss most of the signal here.
+
+![RFM segments](analysis/outputs/04_rfm_segments.png)
+
+Distribution across the RFM labels from the churn query. The "At Risk — High Value Cooling" slice is the one to watch; it's small in count but disproportionately large in monetary value.
+
+![State × category heatmap](analysis/outputs/05_state_category_heatmap.png)
+
+Where each category over- and under-indexes by state. CA and NY lean electronics-heavy; TX and FL over-index on home goods. Drives where to concentrate regional inventory and email targeting.
+
+![AOV distribution](analysis/outputs/06_order_value_distribution.png)
+
+Right-skewed with a long tail. Median is well below the mean, which is why averages lie in retail — summary stats should lead with the median and quartiles, not the mean.
+
 ## Run it
 
 ```bash
+# Postgres path — schema + seed
 psql -f schema/01_create_tables.sql
 psql -f schema/02_create_indexes.sql
 psql -f schema/03_create_views.sql
 psql -f schema/04_seed_data.sql
+
+# Or, no-setup path — reproduces the six charts above in DuckDB
+pip install -r requirements.txt
+python analysis/run_analytics.py
 ```
 
-Sample data is synthetic (`scripts/generate_data.py`). Postgres 14+.
+Sample data is synthetic (`scripts/generate_data.py`). Postgres 14+ for the schema path; DuckDB 1.x for the Python path.
