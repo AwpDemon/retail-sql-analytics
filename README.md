@@ -1,5 +1,15 @@
 # RetailPulse — SQL Analytics Database
 
+[![analysis](https://github.com/AwpDemon/retail-sql-analytics/actions/workflows/analysis.yml/badge.svg)](https://github.com/AwpDemon/retail-sql-analytics/actions/workflows/analysis.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![python](https://img.shields.io/badge/python-3.11-blue)
+
+**Highlights**
+- 8-table 3NF schema, 15 analytical queries (CLV deciles, cohort retention, cross-sell lift, RFM churn, seasonal patterns, geo).
+- Pareto finding: **top 10% of customers drive ~41% of revenue**, Q4 = **34% of annual sales**, laptops + USB-C hubs have a 4.8 lift score.
+- Reproducible two ways: Postgres + `psql` (seed + schema) **or** DuckDB in-memory (`python analysis/run_analytics.py`) — no DB install required.
+- Query-optimization writeup: covering index dropped planning time **~80%** on the RFM query.
+
 A relational e-commerce database in PostgreSQL with 15 analytical queries — customer segmentation, churn risk, cross-sell, cohort analysis, seasonal trends.
 
 The one query I kept coming back to:

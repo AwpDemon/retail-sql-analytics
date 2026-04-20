@@ -1,0 +1,36 @@
+name: analysis
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  run-analytics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Run DuckDB analytics pipeline
+        run: python analysis/run_analytics.py
+
+      - name: Check expected chart outputs
+        run: |
+          test -f analysis/outputs/01_pareto_revenue.png
+          test -f analysis/outputs/02_category_revenue.png
+          test -f analysis/outputs/03_monthly_seasonality.png
+          test -f analysis/outputs/04_rfm_segments.png
+          test -f analysis/outputs/05_state_category_heatmap.png
+          test -f analysis/outputs/06_order_value_distribution.png
+          echo "all charts present"
