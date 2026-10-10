@@ -38,3 +38,5 @@ exports/
 
 # Logs
 *.log
+
+.omc/
