@@ -1,0 +1,36 @@
+{
+  "customers": 2000,
+  "orders": 12000,
+  "order_items": 24654,
+  "cancelled_or_returned_pct": 7.7,
+  "customers_with_revenue": 1902,
+  "top10pct_revenue_share_pct": 41.4,
+  "total_net_revenue": 11598172.18,
+  "q4_revenue_share_pct": 34.2,
+  "q1_revenue_share_pct": 16.6,
+  "category_revenue_share_pct": {
+    "Electronics": 73.0,
+    "Home & Kitchen": 10.9,
+    "Apparel": 8.3,
+    "Sports & Outdoors": 7.8
+  },
+  "aov_mean": 1047.62,
+  "aov_median": 644.78,
+  "revenue_per_customer_by_segment": {
+    "Regular": 5829.46,
+    "VIP": 4809.08,
+    "Premium": 7492.5
+  },
+  "states": 12,
+  "top_state_by_revenue": "GA",
+  "top_state_revenue_share_pct": 19.6,
+  "rfm_segment_counts": {
+    "Loyal / Champion": 458,
+    "Monitor": 334,
+    "At Risk \u2014 Need Attention": 280,
+    "Lost": 280,
+    "Hibernating": 202,
+    "New \u2014 Promising": 183,
+    "At Risk \u2014 High Value Cooling": 165
+  }
+}

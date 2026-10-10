@@ -1,3 +1,6 @@
+-- NOTE: the plan excerpts and timings in comments below are illustrative of the
+-- plan shape PostgreSQL chooses, not measurements. Measured results:
+-- docs/optimization_report.md.
 -- ============================================================================
 -- EXPLAIN ANALYZE Deep Dive
 -- ============================================================================

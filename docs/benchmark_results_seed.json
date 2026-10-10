@@ -1,0 +1,127 @@
+{
+  "postgres": "PostgreSQL 16.14 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+  "table_rows": {
+    "customers": 50,
+    "orders": 99,
+    "order_items": 182,
+    "products": 50
+  },
+  "iterations": 15,
+  "results": [
+    {
+      "num": 1,
+      "title": "Customer Revenue Summary",
+      "variant": "rewritten query",
+      "before": {
+        "planning_ms_median": 0.22,
+        "execution_ms_median": 1.907,
+        "execution_ms_min": 1.791,
+        "execution_ms_max": 2.242,
+        "rows": 20,
+        "result_checksum": "387ce74c24f00b98"
+      },
+      "after": {
+        "planning_ms_median": 0.191,
+        "execution_ms_median": 0.266,
+        "execution_ms_min": 0.256,
+        "execution_ms_max": 0.288,
+        "rows": 20,
+        "result_checksum": "57b1a6712a425d7d"
+      },
+      "execution_change_pct": -86.1,
+      "same_result": false
+    },
+    {
+      "num": 2,
+      "title": "Monthly Revenue with Category Breakdown",
+      "variant": "drop covering index for BEFORE",
+      "before": {
+        "planning_ms_median": 0.256,
+        "execution_ms_median": 0.338,
+        "execution_ms_min": 0.296,
+        "execution_ms_max": 0.394,
+        "rows": 92,
+        "result_checksum": "64ba2de2e7d9de7e"
+      },
+      "after": {
+        "planning_ms_median": 0.277,
+        "execution_ms_median": 0.324,
+        "execution_ms_min": 0.304,
+        "execution_ms_max": 0.694,
+        "rows": 92,
+        "result_checksum": "64ba2de2e7d9de7e"
+      },
+      "execution_change_pct": -4.1,
+      "same_result": true
+    },
+    {
+      "num": 3,
+      "title": "Product Sales Ranking",
+      "variant": "rewritten query",
+      "before": {
+        "planning_ms_median": 0.284,
+        "execution_ms_median": 0.226,
+        "execution_ms_min": 0.206,
+        "execution_ms_max": 0.238,
+        "rows": 20,
+        "result_checksum": "4dfca9dbebd6dc4f"
+      },
+      "after": {
+        "planning_ms_median": 0.188,
+        "execution_ms_median": 0.239,
+        "execution_ms_min": 0.227,
+        "execution_ms_max": 0.281,
+        "rows": 20,
+        "result_checksum": "1cbfff2dc80fe1d1"
+      },
+      "execution_change_pct": 5.8,
+      "same_result": false
+    },
+    {
+      "num": 4,
+      "title": "Customer Segmentation (RFM)",
+      "variant": "rewritten query",
+      "before": {
+        "planning_ms_median": 0.567,
+        "execution_ms_median": 4.527,
+        "execution_ms_min": 4.325,
+        "execution_ms_max": 5.856,
+        "rows": 45,
+        "result_checksum": "f9794c83bd9b7bec"
+      },
+      "after": {
+        "planning_ms_median": 0.375,
+        "execution_ms_median": 0.465,
+        "execution_ms_min": 0.418,
+        "execution_ms_max": 0.777,
+        "rows": 45,
+        "result_checksum": "63550f0b576d3143"
+      },
+      "execution_change_pct": -89.7,
+      "same_result": false
+    },
+    {
+      "num": 5,
+      "title": "Cross-Sell Analysis (Self-Join)",
+      "variant": "rewritten query",
+      "before": {
+        "planning_ms_median": 0.194,
+        "execution_ms_median": 0.163,
+        "execution_ms_min": 0.149,
+        "execution_ms_max": 0.207,
+        "rows": 20,
+        "result_checksum": "2940613784fdc423"
+      },
+      "after": {
+        "planning_ms_median": 0.265,
+        "execution_ms_median": 0.377,
+        "execution_ms_min": 0.354,
+        "execution_ms_max": 0.569,
+        "rows": 20,
+        "result_checksum": "4be4f260ec971f11"
+      },
+      "execution_change_pct": 131.3,
+      "same_result": false
+    }
+  ]
+}

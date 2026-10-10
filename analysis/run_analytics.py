@@ -15,6 +15,7 @@ Run:
 
 from __future__ import annotations
 
+import json
 import os
 import random
 from datetime import datetime, timedelta
@@ -193,7 +194,7 @@ def chart_pareto(con, out):
     ax.axvline(10, color="#888", ls="--", lw=1)
     ax.axhline(df.loc[df["cust_pct"] <= 10, "cum_pct"].iloc[-1], color="#888", ls="--", lw=1)
     top10_share = df.loc[df["cust_pct"] <= 10, "cum_pct"].iloc[-1]
-    ax.set_title(f"Revenue Concentration (Pareto): Top 10% of customers → {top10_share:.1f}% of revenue",
+    ax.set_title(f"Revenue Concentration (Pareto): Top 10% of customers -> {top10_share:.1f}% of revenue",
                  fontsize=13, fontweight="bold")
     ax.set_xlabel("Cumulative % of Customers (sorted by revenue, descending)")
     ax.set_ylabel("Cumulative % of Revenue")
@@ -203,6 +204,49 @@ def chart_pareto(con, out):
     plt.savefig(os.path.join(out, "01_pareto_revenue.png"), dpi=150)
     plt.close()
     return top10_share
+
+
+def headline_metrics(con) -> dict:
+    """Every number quoted in README.md and analysis/findings.md comes from here."""
+    q = lambda sql: con.execute(sql).fetchdf()  # noqa: E731
+    net = "oi.quantity * oi.unit_price * (1 - oi.discount_percent/100.0)"
+    valid = "o.status NOT IN ('Cancelled', 'Returned')"
+    m = {}
+    m["customers"] = int(q("SELECT COUNT(*) n FROM customers")["n"][0])
+    m["orders"] = int(q("SELECT COUNT(*) n FROM orders")["n"][0])
+    m["order_items"] = int(q("SELECT COUNT(*) n FROM order_items")["n"][0])
+    m["cancelled_or_returned_pct"] = round(float(q(
+        f"SELECT AVG(CASE WHEN NOT ({valid}) THEN 1.0 ELSE 0 END)*100 v FROM orders o")["v"][0]), 1)
+    rev = q(f"""SELECT o.customer_id, SUM({net}) r FROM orders o JOIN order_items oi USING(order_id)
+               WHERE {valid} GROUP BY 1 ORDER BY r DESC""")
+    k = max(1, int(len(rev) * 0.10))
+    m["customers_with_revenue"] = int(len(rev))
+    m["top10pct_revenue_share_pct"] = round(float(rev["r"].head(k).sum() / rev["r"].sum() * 100), 1)
+    m["total_net_revenue"] = round(float(rev["r"].sum()), 2)
+    month = q(f"""SELECT month(o.order_date) mo, SUM({net}) r FROM orders o JOIN order_items oi USING(order_id)
+                 WHERE {valid} GROUP BY 1""")
+    m["q4_revenue_share_pct"] = round(float(month[month.mo >= 10]["r"].sum() / month["r"].sum() * 100), 1)
+    m["q1_revenue_share_pct"] = round(float(month[month.mo <= 3]["r"].sum() / month["r"].sum() * 100), 1)
+    cat = q(f"""SELECT COALESCE(pc.category_name, cat.category_name) c, SUM({net}) r
+               FROM order_items oi JOIN orders o USING(order_id) JOIN products p USING(product_id)
+               JOIN categories cat ON cat.category_id = p.category_id
+               LEFT JOIN categories pc ON pc.category_id = cat.parent_category_id
+               WHERE {valid} GROUP BY 1 ORDER BY r DESC""")
+    m["category_revenue_share_pct"] = {r.c: round(float(r.r / cat["r"].sum() * 100), 1) for r in cat.itertuples()}
+    aov = q(f"""SELECT SUM({net}) v FROM orders o JOIN order_items oi USING(order_id)
+               WHERE {valid} GROUP BY o.order_id""")["v"]
+    m["aov_mean"] = round(float(aov.mean()), 2)
+    m["aov_median"] = round(float(aov.median()), 2)
+    seg = q(f"""SELECT c.customer_segment s, SUM({net}) / COUNT(DISTINCT c.customer_id) r
+               FROM customers c JOIN orders o ON o.customer_id = c.customer_id AND {valid}
+               JOIN order_items oi USING(order_id) GROUP BY 1""").set_index("s")["r"]
+    m["revenue_per_customer_by_segment"] = {s: round(float(v), 2) for s, v in seg.items()}
+    st = q(f"""SELECT c.state s, SUM({net}) r FROM customers c JOIN orders o ON o.customer_id = c.customer_id
+              AND {valid} JOIN order_items oi USING(order_id) GROUP BY 1 ORDER BY r DESC""")
+    m["states"] = int(len(st))
+    m["top_state_by_revenue"] = str(st["s"].iloc[0])
+    m["top_state_revenue_share_pct"] = round(float(st["r"].iloc[0] / st["r"].sum() * 100), 1)
+    return m
 
 
 def chart_category_revenue(con, out):
@@ -261,7 +305,7 @@ def chart_seasonality(con, out):
     return q4_share
 
 
-def chart_rfm_segments(con, out):
+def chart_rfm_segments(con, out):  # returns segment counts
     df = con.execute("""
         WITH rfm AS (
           SELECT c.customer_id,
@@ -276,9 +320,9 @@ def chart_rfm_segments(con, out):
         ),
         scored AS (
           SELECT *,
-                 NTILE(5) OVER (ORDER BY recency_days ASC)  AS r_score,
-                 NTILE(5) OVER (ORDER BY frequency  DESC) AS f_score,
-                 NTILE(5) OVER (ORDER BY monetary   DESC) AS m_score
+                 NTILE(5) OVER (ORDER BY recency_days DESC) AS r_score,
+                 NTILE(5) OVER (ORDER BY frequency  ASC)  AS f_score,
+                 NTILE(5) OVER (ORDER BY monetary   ASC)  AS m_score
           FROM rfm
         )
         SELECT
@@ -296,6 +340,7 @@ def chart_rfm_segments(con, out):
         GROUP BY segment
         ORDER BY n DESC
     """).fetchdf()
+    counts = {r.segment: int(r.n) for r in df.itertuples()}
 
     fig, ax = plt.subplots(figsize=(9, 5))
     colors = sns.color_palette("RdYlGn_r", len(df))
@@ -308,6 +353,7 @@ def chart_rfm_segments(con, out):
     plt.tight_layout()
     plt.savefig(os.path.join(out, "04_rfm_segments.png"), dpi=150)
     plt.close()
+    return counts
 
 
 def chart_state_heatmap(con, out):
@@ -367,24 +413,31 @@ def chart_aov_distribution(con, out):
 #  Main
 # ────────────────────────────────────────────────────────────────
 def main():
-    print("[1/3] Synthesizing data …")
+    print("[1/3] Synthesizing data ...")
     frames = synthesize()
     print(f"      customers={len(frames['customers']):,}  orders={len(frames['orders']):,}  "
           f"order_items={len(frames['order_items']):,}")
 
-    print("[2/3] Loading DuckDB …")
+    print("[2/3] Loading DuckDB ...")
     con = load_db(frames)
 
-    print("[3/3] Running queries + rendering charts …")
+    print("[3/3] Running queries + rendering charts ...")
     top10 = chart_pareto(con, OUT)
     chart_category_revenue(con, OUT)
     q4 = chart_seasonality(con, OUT)
-    chart_rfm_segments(con, OUT)
+    rfm = chart_rfm_segments(con, OUT)
     chart_state_heatmap(con, OUT)
     chart_aov_distribution(con, OUT)
 
+    metrics = headline_metrics(con)
+    metrics["rfm_segment_counts"] = rfm
+    assert abs(metrics["top10pct_revenue_share_pct"] - round(top10, 1)) < 0.2
+    assert abs(metrics["q4_revenue_share_pct"] - round(q4, 1)) < 0.2
+    with open(os.path.join(OUT, "metrics.json"), "w", encoding="utf-8") as f:
+        json.dump(metrics, f, indent=2)
+
     print()
-    print(f"  Top 10% of customers → {top10:.1f}% of revenue")
+    print(f"  Top 10% of customers -> {top10:.1f}% of revenue")
     print(f"  Q4 share of annual revenue: {q4:.1f}%")
     print(f"  Outputs written to {OUT}")
 

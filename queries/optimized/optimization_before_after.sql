@@ -1,9 +1,8 @@
 -- ============================================================================
 -- Query Optimization: Before and After Comparisons
 -- ============================================================================
--- This file documents the optimization process for key analytical queries.
--- Each section shows the original (slow) query, the optimized version,
--- and the measured improvement.
+-- Each section shows an original query and a rewritten (or index-assisted)
+-- version. Measured timings: docs/optimization_report.md.
 -- ============================================================================
 
 
@@ -11,11 +10,9 @@
 -- OPTIMIZATION 1: Customer Revenue Summary
 -- Original: Correlated subquery for each customer's total
 -- Optimized: CTE with single aggregation pass
--- Improvement: ~35% faster (eliminated repeated table scans)
 -- ============================================================================
 
 -- BEFORE: Correlated subquery approach
--- Planning Time: ~4.2ms | Execution Time: ~28.5ms (on 2K orders)
 EXPLAIN ANALYZE
 SELECT
     c.customer_id,
@@ -25,7 +22,8 @@ SELECT
      WHERE o.customer_id = c.customer_id
        AND o.status NOT IN ('Cancelled', 'Returned')
     ) AS order_count,
-    (SELECT COALESCE(SUM(oi.quantity * oi.unit_price), 0)
+    (SELECT COALESCE(ROUND(SUM(oi.quantity * oi.unit_price *
+                (1 - oi.discount_percent / 100.0))::NUMERIC, 2), 0)
      FROM orders o
      JOIN order_items oi ON oi.order_id = o.order_id
      WHERE o.customer_id = c.customer_id
@@ -36,8 +34,6 @@ ORDER BY total_revenue DESC
 LIMIT 20;
 
 -- AFTER: CTE with a single aggregation pass
--- Planning Time: ~2.1ms | Execution Time: ~18.3ms
--- Improvement: 36% reduction in execution time
 EXPLAIN ANALYZE
 WITH customer_revenue AS (
     SELECT
@@ -65,7 +61,6 @@ LIMIT 20;
 -- OPTIMIZATION 2: Monthly Revenue with Category Breakdown
 -- Original: Multiple joins without index utilization
 -- Optimized: Added composite index + restructured to use covering index
--- Improvement: ~28% faster (reduced disk I/O with covering index)
 -- ============================================================================
 
 -- The key optimization was creating:
@@ -78,7 +73,6 @@ LIMIT 20;
 
 -- BEFORE: Without covering index
 -- Seq Scan on order_items, many heap fetches
--- Execution Time: ~22.7ms
 EXPLAIN ANALYZE
 SELECT
     DATE_TRUNC('month', o.order_date)::DATE AS month,
@@ -94,19 +88,15 @@ ORDER BY month, revenue DESC;
 
 -- AFTER: With covering index (same query, benefits from idx_order_items_order_product)
 -- Index Only Scan on order_items, zero heap fetches
--- Execution Time: ~16.4ms
--- Improvement: 28% reduction
 
 
 -- ============================================================================
 -- OPTIMIZATION 3: Product Sales Ranking
 -- Original: Sorting all products then limiting
 -- Optimized: Partial index on active products + pre-filtered CTE
--- Improvement: ~22% faster
 -- ============================================================================
 
 -- BEFORE: Scans all products including inactive
--- Execution Time: ~19.1ms
 EXPLAIN ANALYZE
 SELECT
     p.product_id,
@@ -123,8 +113,6 @@ LIMIT 20;
 
 -- AFTER: Pre-filter with partial index + CTE
 -- Planning uses idx_products_is_active partial index
--- Execution Time: ~14.9ms
--- Improvement: 22% reduction
 EXPLAIN ANALYZE
 WITH active_product_sales AS (
     SELECT
@@ -153,34 +141,48 @@ LIMIT 20;
 -- OPTIMIZATION 4: Customer Segmentation (RFM)
 -- Original: Correlated subqueries for R, F, M individually
 -- Optimized: Single CTE pass with NTILE window functions
--- Improvement: ~40% faster (one scan vs. three)
 -- ============================================================================
 
--- BEFORE: Three separate correlated subqueries
--- Execution Time: ~45.3ms
+-- BEFORE: Three separate correlated subqueries per customer (R, F and M each
+-- re-scan orders), then the same NTILE scoring and ordering as AFTER so both
+-- versions return identical rows.
 EXPLAIN ANALYZE
+WITH rfm AS (
+    SELECT
+        c.customer_id,
+        c.first_name || ' ' || c.last_name AS customer_name,
+        (SELECT CURRENT_DATE - MAX(o.order_date)::DATE
+         FROM orders o WHERE o.customer_id = c.customer_id
+           AND o.status NOT IN ('Cancelled', 'Returned')
+        ) AS recency_days,
+        (SELECT COUNT(*)
+         FROM orders o WHERE o.customer_id = c.customer_id
+           AND o.status NOT IN ('Cancelled', 'Returned')
+           AND EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = o.order_id)
+        ) AS frequency,
+        (SELECT ROUND(SUM(oi.quantity * oi.unit_price *
+                    (1 - oi.discount_percent / 100.0))::NUMERIC, 2)
+         FROM orders o JOIN order_items oi ON oi.order_id = o.order_id
+         WHERE o.customer_id = c.customer_id
+           AND o.status NOT IN ('Cancelled', 'Returned')
+        ) AS monetary
+    FROM customers c
+)
 SELECT
-    c.customer_id,
-    c.first_name,
-    (SELECT CURRENT_DATE - MAX(o.order_date)::DATE
-     FROM orders o WHERE o.customer_id = c.customer_id
-       AND o.status NOT IN ('Cancelled', 'Returned')
-    ) AS recency_days,
-    (SELECT COUNT(*)
-     FROM orders o WHERE o.customer_id = c.customer_id
-       AND o.status NOT IN ('Cancelled', 'Returned')
-    ) AS frequency,
-    (SELECT COALESCE(SUM(oi.quantity * oi.unit_price), 0)
-     FROM orders o JOIN order_items oi ON oi.order_id = o.order_id
-     WHERE o.customer_id = c.customer_id
-       AND o.status NOT IN ('Cancelled', 'Returned')
-    ) AS monetary
-FROM customers c
+    customer_id,
+    customer_name,
+    recency_days,
+    frequency,
+    monetary,
+    NTILE(5) OVER (ORDER BY recency_days DESC) AS r_score,
+    NTILE(5) OVER (ORDER BY frequency ASC)     AS f_score,
+    NTILE(5) OVER (ORDER BY monetary ASC)      AS m_score
+FROM rfm
+WHERE monetary IS NOT NULL
+ORDER BY monetary DESC
 LIMIT 50;
 
 -- AFTER: Single aggregation with NTILE scoring
--- Execution Time: ~27.2ms
--- Improvement: 40% reduction
 EXPLAIN ANALYZE
 WITH rfm AS (
     SELECT
@@ -202,9 +204,9 @@ SELECT
     recency_days,
     frequency,
     monetary,
-    NTILE(5) OVER (ORDER BY recency_days ASC)  AS r_score,
-    NTILE(5) OVER (ORDER BY frequency DESC)    AS f_score,
-    NTILE(5) OVER (ORDER BY monetary DESC)     AS m_score
+    NTILE(5) OVER (ORDER BY recency_days DESC) AS r_score,
+    NTILE(5) OVER (ORDER BY frequency ASC)     AS f_score,
+    NTILE(5) OVER (ORDER BY monetary ASC)      AS m_score
 FROM rfm
 ORDER BY monetary DESC
 LIMIT 50;
@@ -214,14 +216,12 @@ LIMIT 50;
 -- OPTIMIZATION 5: Cross-Sell Analysis (Self-Join)
 -- Original: Full self-join on order_items
 -- Optimized: Pre-aggregation + index-assisted join
--- Improvement: ~25% faster on larger datasets
 -- ============================================================================
 
 -- The key insight: pre-filter to products that appear in 3+ orders before
 -- computing the expensive self-join, drastically reducing the join cardinality.
 
 -- BEFORE: Naive self-join (all products)
--- Execution Time: ~31.8ms
 EXPLAIN ANALYZE
 SELECT
     oi1.product_id AS prod_a,
@@ -237,8 +237,6 @@ ORDER BY co_occurrences DESC
 LIMIT 20;
 
 -- AFTER: Pre-filter popular products, then self-join
--- Execution Time: ~23.7ms
--- Improvement: 25% reduction
 EXPLAIN ANALYZE
 WITH popular_items AS (
     SELECT product_id
@@ -267,16 +265,9 @@ LIMIT 20;
 
 
 -- ============================================================================
--- SUMMARY OF OPTIMIZATIONS
+-- MEASURED RESULTS
 -- ============================================================================
--- | # | Query                     | Before (ms) | After (ms) | Improvement |
--- |---|---------------------------|-------------|------------|-------------|
--- | 1 | Customer Revenue Summary  | 28.5        | 18.3       | 36%         |
--- | 2 | Monthly Revenue by Cat    | 22.7        | 16.4       | 28%         |
--- | 3 | Product Sales Ranking     | 19.1        | 14.9       | 22%         |
--- | 4 | Customer Segmentation RFM | 45.3        | 27.2       | 40%         |
--- | 5 | Cross-Sell Self-Join      | 31.8        | 23.7       | 25%         |
--- |---|---------------------------|-------------|------------|-------------|
--- | AVG                           | 29.5        | 20.1       | 32%         |
+-- Timings are not hard-coded here. Run scripts/benchmark_optimizations.py
+-- against a loaded database; results and the method are in
+-- docs/optimization_report.md and docs/benchmark_results_100k.json.
 -- ============================================================================
--- Overall average improvement exceeds the 25% target.
