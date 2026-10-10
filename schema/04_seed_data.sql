@@ -1,6 +1,6 @@
 -- ============================================================================
 -- RetailPulse Analytics Database — Sample Seed Data
--- MIST 4600 | University of Georgia | Spring 2025
+-- MIST 4610 | University of Georgia | Spring 2025
 -- ============================================================================
 -- Inserts a representative sample dataset for development and testing.
 -- For larger datasets, use scripts/generate_data.py.

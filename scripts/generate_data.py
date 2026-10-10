@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 RetailPulse — Realistic Sample Data Generator
-MIST 4600 | University of Georgia | Spring 2025
+MIST 4610 | University of Georgia | Spring 2025
 
 Generates realistic e-commerce data and inserts it into a PostgreSQL database.
 Uses the Faker library for realistic names, addresses, and dates.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 RetailPulse — Query Performance Benchmarking Tool
-MIST 4600 | University of Georgia | Spring 2025
+MIST 4610 | University of Georgia | Spring 2025
 
 Runs each analytical query multiple times with EXPLAIN ANALYZE and reports
 median execution times, planning times, and row counts.

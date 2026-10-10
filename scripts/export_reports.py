@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 RetailPulse — Report Exporter
-MIST 4600 | University of Georgia | Spring 2025
+MIST 4610 | University of Georgia | Spring 2025
 
 Runs analytical queries and exports results to CSV files for use in
 presentations, dashboards, or further analysis in Python/R/Excel.

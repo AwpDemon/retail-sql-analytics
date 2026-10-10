@@ -1,6 +1,6 @@
 -- ============================================================================
 -- RetailPulse Analytics Database — Views
--- MIST 4600 | University of Georgia | Spring 2025
+-- MIST 4610 | University of Georgia | Spring 2025
 -- ============================================================================
 -- Reusable views that simplify common analytical patterns.
 -- ============================================================================

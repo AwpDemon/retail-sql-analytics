@@ -1,6 +1,6 @@
 -- ============================================================================
 -- RetailPulse Analytics Database — Table Definitions
--- MIST 4600 | University of Georgia | Spring 2025
+-- MIST 4610 | University of Georgia | Spring 2025
 -- ============================================================================
 -- Execute order: This file first, then 02_create_indexes.sql, 03, 04.
 -- Target: PostgreSQL 14+

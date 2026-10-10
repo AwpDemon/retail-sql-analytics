@@ -1,6 +1,6 @@
 -- ============================================================================
 -- RetailPulse Analytics Database — Query Validation Tests
--- MIST 4600 | University of Georgia | Spring 2025
+-- MIST 4610 | University of Georgia | Spring 2025
 -- ============================================================================
 -- These tests validate data integrity and query correctness.
 -- Run after loading seed data: psql -d retailpulse -f tests/test_queries.sql

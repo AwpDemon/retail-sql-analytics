@@ -1,6 +1,6 @@
 -- ============================================================================
 -- RetailPulse Analytics Database — Index Definitions
--- MIST 4600 | University of Georgia | Spring 2025
+-- MIST 4610 | University of Georgia | Spring 2025
 -- ============================================================================
 -- Strategic indexes designed to optimize the 20+ analytical queries in this
 -- project. Each index includes a comment explaining which queries benefit.
