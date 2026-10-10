@@ -63,15 +63,17 @@ SELECT
     RANK() OVER (ORDER BY total_revenue DESC)
                                              AS revenue_rank,
     ROUND(
-        PERCENT_RANK() OVER (ORDER BY total_revenue) * 100, 0
+        (PERCENT_RANK() OVER (ORDER BY total_revenue) * 100)::NUMERIC, 0
     )                                        AS revenue_percentile,
     ROUND(
         total_revenue / NULLIF(orders_handled, 0), 2
     )                                        AS revenue_per_order,
-    -- Revenue per month of tenure
+    -- Revenue per month of tenure (total months = years * 12 + months;
+    -- EXTRACT(MONTH FROM AGE(...)) alone is only the 0-11 month component)
     ROUND(
         total_revenue / GREATEST(
-            EXTRACT(MONTH FROM AGE(CURRENT_DATE, hire_date)), 1
+            EXTRACT(YEAR FROM AGE(CURRENT_DATE, hire_date)) * 12
+            + EXTRACT(MONTH FROM AGE(CURRENT_DATE, hire_date)), 1
         ), 2
     )                                        AS monthly_revenue_rate
 FROM employee_sales

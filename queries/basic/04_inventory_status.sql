@@ -18,7 +18,8 @@ WITH recent_sales_velocity AS (
         ROUND(
             SUM(oi.quantity)::NUMERIC /
             GREATEST(
-                EXTRACT(DAY FROM (CURRENT_DATE - MIN(o.order_date)::DATE)),
+                -- date - date is already an integer number of days in PostgreSQL
+                (CURRENT_DATE - MIN(o.order_date)::DATE),
                 1
             ),
             2

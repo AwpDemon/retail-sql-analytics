@@ -83,9 +83,9 @@ SELECT
     )                                               AS profit_per_unit,
     -- Margin percentile rank (0-100, higher = better margin)
     ROUND(
-        PERCENT_RANK() OVER (
+        (PERCENT_RANK() OVER (
             ORDER BY gross_profit / NULLIF(actual_revenue, 0)
-        ) * 100, 0
+        ) * 100)::NUMERIC, 0
     )                                               AS margin_percentile,
     -- Margin tier
     CASE
