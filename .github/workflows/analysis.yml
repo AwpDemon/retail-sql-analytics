@@ -34,8 +34,10 @@ jobs:
           assert not bad, f"metrics drifted: {bad}"
           print("metrics reproduce")
           PY
-      - name: README / findings consistency tests
-        run: python -m pytest tests -v
+      - name: README / findings consistency tests (against the committed metrics)
+        run: |
+          cp /tmp/committed_metrics.json analysis/outputs/metrics.json
+          python -m pytest tests -v
 
   postgres-queries:
     runs-on: ubuntu-latest
