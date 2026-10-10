@@ -88,7 +88,7 @@ Q4 is 34.2% of annual revenue (Q1: 16.6%), following the month weights in the ge
 
 ![RFM segments](analysis/outputs/04_rfm_segments.png)
 
-Distribution across the RFM labels from the churn query (1,902 customers with revenue). 165 fall in "At Risk — High Value Cooling": recency in the middle quintile or older, monetary value in the top two quintiles. (An earlier version of this query had the NTILE directions inverted, so it labeled the most recent, most frequent customers as "Lost"; fixed in `10_churn_prediction.sql` and the pipeline.)
+Distribution across the RFM labels from the churn query (1,902 customers with revenue). 164 fall in "At Risk — High Value Cooling": recency in the middle quintile or older, monetary value in the top two quintiles. (An earlier version of this query had the NTILE directions inverted, so it labeled the most recent, most frequent customers as "Lost"; fixed in `10_churn_prediction.sql` and the pipeline.)
 
 ![State × category heatmap](analysis/outputs/05_state_category_heatmap.png)
 

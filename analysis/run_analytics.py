@@ -320,9 +320,9 @@ def chart_rfm_segments(con, out):  # returns segment counts
         ),
         scored AS (
           SELECT *,
-                 NTILE(5) OVER (ORDER BY recency_days DESC) AS r_score,
-                 NTILE(5) OVER (ORDER BY frequency  ASC)  AS f_score,
-                 NTILE(5) OVER (ORDER BY monetary   ASC)  AS m_score
+                 NTILE(5) OVER (ORDER BY recency_days DESC, customer_id) AS r_score,
+                 NTILE(5) OVER (ORDER BY frequency  ASC, customer_id)  AS f_score,
+                 NTILE(5) OVER (ORDER BY monetary   ASC, customer_id)  AS m_score
           FROM rfm
         )
         SELECT

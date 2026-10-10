@@ -17,20 +17,20 @@
   "aov_mean": 1047.62,
   "aov_median": 644.78,
   "revenue_per_customer_by_segment": {
-    "Regular": 5829.46,
     "VIP": 4809.08,
+    "Regular": 5829.46,
     "Premium": 7492.5
   },
   "states": 12,
   "top_state_by_revenue": "GA",
   "top_state_revenue_share_pct": 19.6,
   "rfm_segment_counts": {
-    "Loyal / Champion": 458,
-    "Monitor": 334,
-    "At Risk \u2014 Need Attention": 280,
-    "Lost": 280,
-    "Hibernating": 202,
-    "New \u2014 Promising": 183,
-    "At Risk \u2014 High Value Cooling": 165
+    "Loyal / Champion": 459,
+    "Monitor": 345,
+    "At Risk \u2014 Need Attention": 304,
+    "Lost": 293,
+    "New \u2014 Promising": 172,
+    "Hibernating": 165,
+    "At Risk \u2014 High Value Cooling": 164
   }
 }

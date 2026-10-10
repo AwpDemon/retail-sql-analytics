@@ -41,8 +41,8 @@ Mean order value $1,047.62 vs median $644.78: right-skewed, so report the median
 
 | Segment label | Net revenue per customer |
 |---|---|
-| Regular | $5,829 |
 | VIP | $4,809 |
+| Regular | $5,829 |
 | Premium | $7,492 |
 
 Segment labels are assigned at random in the generator, independent of purchasing, so they do not separate
@@ -52,13 +52,13 @@ spend. (An earlier version claimed "VIP customers spend 3.2x more"; the data doe
 
 | Segment | Customers |
 |---|---|
-| Loyal / Champion | 458 |
-| Monitor | 334 |
-| At Risk — Need Attention | 280 |
-| Lost | 280 |
-| Hibernating | 202 |
-| New — Promising | 183 |
-| At Risk — High Value Cooling | 165 |
+| Loyal / Champion | 459 |
+| Monitor | 345 |
+| At Risk — Need Attention | 304 |
+| Lost | 293 |
+| New — Promising | 172 |
+| Hibernating | 165 |
+| At Risk — High Value Cooling | 164 |
 
 ## 7. Geography
 

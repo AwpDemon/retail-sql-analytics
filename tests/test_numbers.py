@@ -28,6 +28,8 @@ def test_readme_pipeline_numbers_match_metrics():
     assert f"{METRICS['category_revenue_share_pct']['Electronics']}% of net revenue" in README
     assert f"${METRICS['aov_mean']:,.2f}" in README and f"${METRICS['aov_median']:,.2f}" in README
     assert f"{METRICS['customers_with_revenue']:,} customers with revenue" in README
+    cooling = METRICS["rfm_segment_counts"]["At Risk — High Value Cooling"]
+    assert f'{cooling} fall in "At Risk' in README
 
 
 def test_readme_benchmark_numbers_match_json():
@@ -88,7 +90,7 @@ def test_rfm_scores_point_the_right_way(tmp_path):
 
     # The pipeline's own query must use the same directions.
     src = (ROOT / "analysis" / "run_analytics.py").read_text(encoding="utf-8")
-    assert "ORDER BY recency_days DESC) AS r_score" in src
+    assert "ORDER BY recency_days DESC, customer_id) AS r_score" in src
     churn = (ROOT / "queries" / "advanced" / "10_churn_prediction.sql").read_text(encoding="utf-8")
     assert "ORDER BY days_since_last_order DESC" in churn
     counts = run_analytics.chart_rfm_segments(con, str(tmp_path))

@@ -44,11 +44,12 @@ rfm_scored AS (
         *,
         -- Score each dimension 1-5 (5 is best)
         -- Recency: lower days = higher score
-        NTILE(5) OVER (ORDER BY days_since_last_order DESC) AS recency_score,
+        -- customer_id breaks ties so bucket boundaries are deterministic
+        NTILE(5) OVER (ORDER BY days_since_last_order DESC, customer_id) AS recency_score,
         -- Frequency: more orders = higher score
-        NTILE(5) OVER (ORDER BY order_count ASC)            AS frequency_score,
+        NTILE(5) OVER (ORDER BY order_count ASC, customer_id) AS frequency_score,
         -- Monetary: more revenue = higher score
-        NTILE(5) OVER (ORDER BY total_revenue ASC)          AS monetary_score
+        NTILE(5) OVER (ORDER BY total_revenue ASC, customer_id) AS monetary_score
     FROM rfm_raw
 )
 
